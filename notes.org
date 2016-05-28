@@ -1,0 +1,125 @@
+* What _is_ Lens?
+  1. A library for first-class record access.
+     1. Zero compromises: lens code, when run with proper optimization, is as fast as standard record access
+  2. A language on top of Haskell.
+     1. One often sees "here's how you do it with Haskell, here's how you do it with Lens"
+     2. You get to mix/match based on your experience and what you find readable
+
+* What am I not going to accomplish here?
+  1. Explaining all of Lens.
+  2. Properly elucidating the relationships between concepts.
+
+
+* What
+  1. Getter syntax with ^.
+  2. Composition with .
+
+* Things to emphasize
+  1. There's gonna be a lot of new syntax
+  2. The type signatures can get scary
+     + I'm gonna be using simplified type definitions
+     + A lot of the types look hairy but aren't too bad
+  3. You can learn lens a piece at a time
+
+* Bad things to demonstrate
+  1. Unfortunate syntax
+  2. Non-composabile setters
+  3. Namespace collision
+     + You can work around this with typeclasses, except for #2.
+  4. Overreliance on case statements
+
+* Lenses
+  1. A lens allows you to view and update one field of a structure.
+  2. That is to say, a ~Lens struct field~ is two functions:
+     1. the getter, ~struct -> field~
+     2. and the setter, ~struct -> field -> struct~
+
+* Declaring Lenses
+
+#+begin_src haskell
+
+module Person
+   ( Person (Person)
+   , name
+   , job
+   )
+
+data Person = Person
+   { _name :: String
+   , _job  :: Occupation
+   }
+
+makeLenses ''Person
+
+name :: Lens' Person String
+job  :: Lens' Person Occupation
+
+#+end_src
+
+  * Declare lenses for every record type.
+  * You usually want ~makeLenses ''Typ~
+  * A lens is generated for any underscore-prefixed field.
+  * Export only the lenses you want. Use an explicit export list to control what's exported.
+
+* Building Your Own
+  + ~lens :: (s -> f) -> (s -> f -> s) -> Lens s f~
+
+* Getter
+  + A ~Getter s a~ is just a function ~(s -> a)~
+  + ~to :: (s -> a) -> Getter s a~ -- the promotion function
+  + ~view :: Getter s a -> s -> a~ -- just function application
+  + ~(.^) :: s -> Getter s a -> a~ -- infix view
+
+* Tuples
+* non
+
+* The documentation
+  1. Bookmark it
+  2. If you see an operator you don't understand, go to Control.Lens.Operators
+  3. If you have a general question, check under Control.Lens.
+  4. Otherwise, don't forget about the index!
+
+* Setters
+
+#+begin_src haskell
+set :: Setter s f -> f -> s -> s
+
+-- Setting a value
+set lens field struct
+
+struct & lens .~ field
+       & lens2 .~ field2
+       & lens3 .~ field3
+
+(lens3 .~ field3) $
+(lens2 .~ field2) $
+(lens .~ field) $
+struct
+
+#+end_src
+
+** Things to Avoid
+
+Don't define your own setters:
+#+begin_src haskell
+    setFirmwareGroupId :: UUID -> FirmwareGroup -> FirmwareGroup
+    setFirmwareGroupId uuid g = g { fwGroupId = uuid }
+#+end_src
+
+Declare lenses, and use ~set~.
+
+#+begin_src haskell
+set groupID uuid g
+#+end_src
+
+* Composition
+* Isomorphisms
+* Prisms
+
+* Bonus Topics!
+** Prisms
+  * Lenses are interesting, but a ~Lens s f~ doesn't say anything about the semantic relationship betweeen
+    ~s~ and ~f~. What if we
+
+** Isos
+** Classy Compositional Inheritance
